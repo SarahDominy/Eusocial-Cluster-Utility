@@ -2,23 +2,77 @@ import tkinter
 from tkinter import messagebox
 from tkinter import font
 from tkinter import *
+#setting up
 clustername = ""
+username = ""
 passwrd = ""
+nodes = 0
 top = tkinter.Tk()
 top.title("ECU")
 top.configure(bg = "black")
-pad1 = tkinter.Frame(top, width=350, height=45, bg = "black")
-pad2 = tkinter.Frame(top, width=350, height=45, bg = "black")
-pad3 = tkinter.Frame(top, width=350, height=45, bg = "black")
-pad4 = tkinter.Frame(top, width=350, height=20, bg = "black")
-pad5 = tkinter.Frame(top, width=350, height=20, bg = "black")
+def check():
+    file = open("info.txt", "r")
+    stri = file.readline()
+    if len(stri) > 0:
+        if stri[0] == "#":
+            nodes = int(stri[1:])
+check()
+
 # Code to add widgets will go here...
 var = StringVar()
 fnt = font.Font(family='Times', size=15, weight='bold')
 label = Label(top, textvariable=var, bd = 30, relief = GROOVE, font = fnt, pady = 10, padx = 5, bg = "black", fg = "white")
 var.set("Eusocial Cluster Utility")
-def helloCallBack():
-   messagebox.showinfo( "Instructions for first time use", "Please install the following dependencies before using!\n 1.)Openssh-server \n 2.)gfortran")
+img = PhotoImage(file="light.gif")
+canvas = Canvas(top, width = 325, height = 300, bg = "black", highlightthickness=0)
+canvas.create_image(2,2, anchor = NW, image=img)
+#functions for each button
+def first():
+   messagebox.showinfo( "Instructions for first time use", "Please install the following dependencies before " +
+    "using!\n 1.)Openssh-server \n 2.)cssh \n 3.)gfortran \n\nPlease fill out all information, as all fields will be necessary. " +
+    "\nSome steps will need to be repeated multiple times, such as entering MAC addresses for all machines in the cluster.")
+def setnum():
+    txt = tkinter.Tk()
+    top.quit()
+    v = StringVar()
+    E1 = Entry(txt, bd=5, textvariable=v)
+    E1.grid()
+    E1.focus_set()
+    def setnumber():
+        nodes = int(E1.get())
+        nodests = str(nodes)
+        file = open("info.txt", "a")
+        #when entering the number of nodes, the line starts with a pound sign to identify the variable
+        file.write("# "  + nodests+ "\n")
+        file.close()
+        txt.destroy()
+        print(nodes)
+
+    button = Button(txt, text="Set number", width=10, command=setnumber)
+
+    button.grid()
+    txt.mainloop()
+def user():
+    messagebox.showinfo("Enter username",
+                        "Make sure there is a profile on each computer with administrative priveleges " +
+                        "under the username you are about to enter")
+    txt = tkinter.Tk()
+    txt.configure(width = 30)
+    v = StringVar()
+    E1 = Entry(txt, bd=5, textvariable=v)
+    E1.grid()
+    E1.focus_set()
+    def username():
+        username = E1.get()
+        file = open("info.txt", "a")
+        #the username line begins with a u as an identifier
+        file.write("u " + username + "\n")
+        file.close()
+        txt.destroy()
+    button = Button(txt, text="Set username", width=10, command=username)
+    button.grid()
+    txt.mainloop()
+
 def setname():
     txt = tkinter.Tk()
     v = StringVar()
@@ -28,14 +82,59 @@ def setname():
     def setclus():
         clustername = E1.get()
         file = open("info.txt", "a")
-        file.write(clustername + "\n")
+        #the cluster name line begins with an n as an identifier
+        file.write("n " + clustername + "\n")
         file.close()
-        #print (clustername)
         txt.destroy()
     button = Button(txt, text="Set name", width=10, command=setclus)
     button.grid()
     txt.mainloop()
+
+def setmac():
+    messagebox.showinfo("Enter MAC address","You will need to follow these steps for every node in the cluster. \nTo find MAC address: \n"+"1.) Open a terminal. \n2.) Type in \"ifconfig -a\" without quotes and hit enter."+
+                    "\n3.) The returned value is the MAC address, copy and paste it in the next box.")
+    txt = tkinter.Tk()
+    v = StringVar()
+    E1 = Entry(txt, bd=5, textvariable = v)
+    E1.grid()
+    E1.focus_set()
+    def setaddr():
+        macadd = E1.get()
+        file = open("info.txt", "a")
+        #the mac address line begins with an m as an identifier
+        file.write("m " + macadd + "\n")
+        file.close()
+        txt.destroy()
+    button = Button(txt, text="Set address", width=10, command=setaddr)
+    button.grid()
+    txt.mainloop()
+def setnodename():
+    messagebox.showinfo("Enter node name","The name you enter will have a number appended to it to keep all " +
+                                  "node names uniform. \n(e.g. Unit001, Unit002, etc.)")
+    txt = tkinter.Tk()
+    v = StringVar()
+    E1 = Entry(txt, bd=5, textvariable = v)
+    E1.grid()
+    E1.focus_set()
+    def nodename():
+        for i in range(0,nodes):
+            pref = ""
+            if i <= 99:
+                pref = "0"
+            if i <= 9:
+                pref = "00"
+            nod = E1.get()
+            file = open("info.txt", "a")
+            #the node name uses a u as an identifier
+            file.write("u " + nod + pref + str(i)+ "\n")
+            file.close()
+        txt.destroy()
+    button = Button(txt, text="Set node name", width=10, command=nodename)
+    button.grid()
+    txt.mainloop()
+
 def setpass():
+    messagebox.showinfo("Enter ssh password", "Make sure the password you enter is the administrative password for all nodes in the cluster.")
     txt = tkinter.Tk()
     v = StringVar()
     E1 = Entry(txt, bd=5, textvariable = v, show ="*")
@@ -45,28 +144,57 @@ def setpass():
         passwrd = E1.get()
         #print (passwrd)
         file = open("info.txt","a")
-        file.write(passwrd + "\n")
+        #the password line begins with a p as an identifier
+        file.write("p " + passwrd + "\n")
         file.close()
         txt.destroy()
     button = Button(txt, text="Set password", width=10, command=password)
     button.grid()
     txt.mainloop()
+
 def reset():
-    file = open("info.txt", "w")
-    file.close()
-    messagebox.showinfo("Reset name and password","Cluster name and password cleared.")
-A = tkinter.Button(top, text ="Instructions for first time use", command = helloCallBack)
-B = tkinter.Button(top, text ="Set cluster name", command = setname)
-C = tkinter.Button(top, text ="Set ssh password", command = setpass)
-D = tkinter.Button(top, text ="Reset name and password", command = reset)
+    txt = tkinter.Tk()
+    txt.title("Create new cluster")
+    label = Label(txt, text = "Warning: This will clear previous cluster data.", bd = 30)
+    label.pack()
+    def clear():
+        file = open("info.txt", "w")
+        file.close()
+        nodes = 0
+        username = ""
+        passwrd = ""
+        clustername = ""
+        messagebox.showinfo("Create new cluster", "Previous data has been cleared.")
+        txt.destroy()
+    button = Button(txt, text="Clear data", width=10, command=clear)
+    button.pack()
+    txt.mainloop()
+
+#putting widgets in order
+pad1 = tkinter.Frame(top, width=500, height=45, bg = "black")
+pad2 = tkinter.Frame(top, width=350, height=45, bg = "black")
+pad3 = tkinter.Frame(top, width=350, height=45, bg = "black")
+pad4 = tkinter.Frame(top, width=350, height=20, bg = "black")
+pad5 = tkinter.Frame(top, width=350, height=20, bg = "black")
+fnt = font.Font(family='Times')
+A = tkinter.Button(top, text ="Instructions for first time use", font = fnt,command = first)
+B = tkinter.Button(top, text ="Enter number of nodes", font = fnt,command = setnum)
+C = tkinter.Button(top, text ="Set cluster name", font = fnt,command = setname)
+D = tkinter.Button(top, text ="Set username", font = fnt,command = user)
+E = tkinter.Button(top, text ="Set ssh password", font = fnt,command = setpass)
+F = tkinter.Button(top, text ="Set MAC address", font = fnt,command = setmac)
+G = tkinter.Button(top, text ="Set node name", font = fnt,command = setnodename)
+H = tkinter.Button(top, text ="Create new cluster", font = fnt,command = reset)
 pad3.grid()
 label.grid()
-pad1.grid()
+canvas.grid()
 A.grid()
-#pad4.grid()
 B.grid()
-#pad5.grid()
 C.grid()
 D.grid()
+E.grid()
+F.grid()
+G.grid()
+H.grid()
 pad2.grid()
 top.mainloop()
